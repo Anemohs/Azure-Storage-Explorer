@@ -1,28 +1,35 @@
-﻿#V1.0
+#V1.1
 Import-Module Az
 
-#Connection
-$connectionString = "<connectionString>"
+#Connectio
+$connectionString = Read-Host "Insert the Connection String"
 $storageAccount = New-AzStorageContext -ConnectionString $connectionString
 
-#Calcolo dimensione totale blob
-$blobs = Get-AzStorageBlob -Container <container> -Blob "<blob>" -Context $storageAccount
+$start = Get-Date
+
+#Total size of Blobs
+$blobs = Get-AzStorageBlob -Container "<container>" -Blob "<blob>" -Context $storageAccount
 $containerSize = ($blobs | Measure-Object -Property Length -Sum).Sum  / 1MB
 $containerSize = "{0:0.00}" -f $containerSize
 
-#Output Risultato
-Write-Output "La dimensione di dbFiles e': $containerSize MB"
+#Output Results
+Write-Output "Size of dbFiles: $containerSize MB"
 
-#Divisione dei file in base all'anno
+#Division file by years
 $filesByYear = $blobs | Group-Object -Property { $_.BlobProperties.CreatedOn.Year } 
 
-#Calcolo della dimensione per anno
+#Dimention of file by years
 foreach ($group in $filesByYear) {
   $yearlyBlobs = $group.Group
   $yearlySize = ($yearlyBlobs | Measure-Object -Property Length -Sum).Sum  / 1MB
   $yearlySize = "{0:0.00}" -f $yearlySize
   $year = $group.Name
 
-  #Output Risultato
-  Write-Output "La dimensione di dbFiles nel $year e': $yearlySize MB"
+  #Output results
+  Write-Output "Size of dbFiles in $($year): $yearlySize MB"
+
 }
+
+$end = Get-Date
+$time = $end - $start
+Write-Output "Total time elapsed: $($time.TotalSeconds) seconds"
